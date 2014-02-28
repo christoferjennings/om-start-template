@@ -17,3 +17,5 @@
     (dom/h2 nil (:text app)))
   app-state
   {:target (. js/document (getElementById "app1"))}) ;; <-- "app0" to "app1"
+
+(swap! app-state assoc :text "Multiple roots!")
