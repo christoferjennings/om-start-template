@@ -1,6 +1,8 @@
-(ns om-0-5-0-tut.core.core
+(ns om-tut.core
+  (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [om.core :as om :include-macros true]
-            [om.dom :as dom :include-macros true]))
+            [om.dom :as dom :include-macros true]
+            [cljs.core.async :refer [put! chan <!]]))
 
 (enable-console-print!)
 
@@ -24,20 +26,32 @@
 
 (defn contact-view [contact owner]
   (reify
-    om/IRender
-    (render [this]
+    om/IRenderState
+    (render-state [this {:keys [delete]}]
       (dom/li nil
         (dom/span nil (display-name contact))
-        (dom/button nil "Delete")))))
+        (dom/button #js {:onClick (fn [e] (put! delete @contact))} "Delete")))))
 
 (defn contacts-view [app owner]
   (reify
-    om/IRender
-    (render [this]
+    om/IInitState
+    (init-state [_]
+      {:delete (chan)})
+    om/IWillMount
+    (will-mount [_]
+      (let [delete (om/get-state owner :delete)]
+        (go (loop []
+          (let [contact (<! delete)]
+            (om/transact! app :contacts
+              (fn [xs] (vec (remove #(= contact %) xs))))
+            (recur))))))
+    om/IRenderState
+    (render-state [this {:keys [delete]}]
       (dom/div nil
         (dom/h2 nil "Contact list")
         (apply dom/ul nil
-          (om/build-all contact-view (:contacts app)))))))
+          (om/build-all contact-view (:contacts app)
+            {:init-state {:delete delete}}))))))
 
 (defn stripe [text bgc]
   (let [st #js {:backgroundColor bgc}]
