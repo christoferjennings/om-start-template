@@ -11,3 +11,5 @@
     (dom/h1 nil (:text app)))
   app-state
   {:target (. js/document (getElementById "app"))})
+
+(swap! app-state assoc :text "Do it live!")
