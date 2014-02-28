@@ -6,6 +6,10 @@
 
 (def app-state (atom {:list ["Lion" "Zebra" "Buffalo" "Antelope"]}))
 
+(defn stripe [text bgc]
+  (let [st #js {:backgroundColor bgc}]
+    (dom/li #js {:style st} text)))
+
 (om/root
   (fn [app owner]
     (apply dom/ul #js {:className "animals"}
