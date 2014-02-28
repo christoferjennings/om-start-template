@@ -10,4 +10,4 @@
   (fn [app owner]
     (dom/h2 nil (:text app)))
   app-state
-  {:target (. js/document (getElementById "app"))})
+  {:target (. js/document (getElementById "app0"))})
