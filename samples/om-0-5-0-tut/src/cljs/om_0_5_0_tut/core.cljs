@@ -8,8 +8,6 @@
 
 (om/root
   (fn [app owner]
-    (dom/h1 nil (:text app)))
+    (dom/h2 nil (:text app)))
   app-state
   {:target (. js/document (getElementById "app"))})
-
-(swap! app-state assoc :text "Do it live!")
