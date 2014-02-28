@@ -29,12 +29,11 @@
         (>= c 2) (assoc :middle middle)))))
 
 (defn add-contact [app owner]
-  (let [new-contact (-> (om/get-node owner "new-contact")
-                        .-value
-                        parse-contact)]
+  (let [input (om/get-node owner "new-contact")
+        new-contact (-> input .-value parse-contact)]
     (when new-contact
-      (om/transact! app :contacts #(conj % new-contact)))))
-
+      (om/transact! app :contacts #(conj % new-contact))
+      (set! (.-value input) ""))))
 
 (defn middle-name [{:keys [middle middle-initial]}]
   (cond
@@ -52,11 +51,18 @@
         (dom/span nil (display-name contact))
         (dom/button #js {:onClick (fn [e] (put! delete @contact))} "Delete")))))
 
+(defn handle-change [e owner {:keys [text]}]
+  (let [value (.. e -target -value)]
+    (if-not (re-find #"[0-9]" value)
+      (om/set-state! owner :text value)
+      (om/set-state! owner :text text))))
+
 (defn contacts-view [app owner]
   (reify
     om/IInitState
     (init-state [_]
-      {:delete (chan)})
+      {:delete (chan)
+       :text ""})
     om/IWillMount
     (will-mount [_]
       (let [delete (om/get-state owner :delete)]
@@ -73,7 +79,9 @@
           (om/build-all contact-view (:contacts app)
             {:init-state state}))
         (dom/div nil
-          (dom/input #js {:type "text" :ref "new-contact"})
+          (dom/input
+            #js {:type "text" :ref "new-contact" :value (:text state)
+                 :onChange #(handle-change % owner state)})
           (dom/button #js {:onClick #(add-contact app owner)} "Add contact"))))))
 
 (defn stripe [text bgc]
